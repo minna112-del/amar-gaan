@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>আমার গান</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: "Noto Sans Bengali", "SolaimanLipi", "Hind Siliguri", system-ui, -apple-system, sans-serif;
+    background: #0a0d16;
+    color: #f2f4f8;
+    padding: 0 0 48px;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 0; }
+
+  /* ---------- Poster / header ---------- */
+  header { text-align: center; padding: 26px 8px 10px; }
+  .poster {
+    font-size: 52px; font-weight: 900; line-height: 1.1; letter-spacing: .5px;
+    background: linear-gradient(100deg, #f7d774 0%, #d4a017 22%, #fff3b0 40%, #e8b923 58%, #f7d774 78%, #b8860b 100%);
+    background-size: 200% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: shine 6s linear infinite;
+    text-shadow: 0 0 42px rgba(247, 215, 116, .18);
+  }
+  @keyframes shine { to { background-position: 200% 0; } }
+  .sub { margin-top: 8px; color: #9aa3b5; font-size: 15px; }
+
+  /* ---------- Player card ---------- */
+  .player {
+    margin-top: 18px; background: #121728; border: 1px solid #232c47;
+    border-radius: 22px; padding: 22px 18px 18px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  .disc-row { display: flex; align-items: center; gap: 16px; }
+  .disc {
+    width: 92px; height: 92px; border-radius: 50%; flex: 0 0 92px;
+    background: radial-gradient(circle at 35% 35%, #3a4568 0%, #141a2e 55%, #0a0d16 100%);
+    border: 3px solid #2a3452; position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .disc::after {
+    content: ""; width: 26px; height: 26px; border-radius: 50%;
+    background: #f7d774; border: 4px solid #0a0d16;
+  }
+  .disc.playing { animation: spin 3.2s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .disc .note { position: absolute; font-size: 22px; z-index: 1; }
+  .track-info { min-width: 0; flex: 1; }
+  .track-title { font-size: 19px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-meta { margin-top: 5px; color: #9aa3b5; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .track-state { margin-top: 8px; font-size: 13px; color: #f7d774; }
+
+  /* progress */
+  .progress-wrap { margin-top: 18px; }
+  input[type="range"].seek {
+    width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 3px;
+    background: #2a3452; outline: none; cursor: pointer;
+  }
+  input[type="range"].seek::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: #f7d774; border: 2px solid #0a0d16; cursor: pointer;
+  }
+  input[type="range"].seek::-moz-range-thumb {
+    width: 16px; height: 16px; border-radius: 50%; background: #f7d774; border: 2px solid #0a0d16; cursor: pointer;
+  }
+  .times { display: flex; justify-content: space-between; margin-top: 6px; color: #9aa3b5; font-size: 12px; }
+
+  /* controls */
+  .controls { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 14px; }
+  .cbtn {
+    background: none; border: none; color: #f2f4f8; cursor: pointer;
+    font-size: 26px; line-height: 1; padding: 6px; border-radius: 50%;
+  }
+  .cbtn:active { transform: scale(.92); }
+  .play {
+    width: 68px; height: 68px; font-size: 30px; background: #f7d774; color: #14100a;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 22px rgba(247, 215, 116, .35);
+  }
+  .play:disabled { opacity: .45; box-shadow: none; }
+  .mini-row { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; gap: 10px; }
+  .toggle {
+    background: #1a2138; border: 1px solid #2a3452; color: #c6cddd; cursor: pointer;
+    font-size: 13px; padding: 7px 12px; border-radius: 999px;
+  }
+  .toggle.on { background: #f7d774; color: #14100a; border-color: #f7d774; font-weight: 700; }
+  .vol { display: flex; align-items: center; gap: 8px; color: #9aa3b5; font-size: 14px; }
+  input[type="range"].vol-range { width: 90px; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 3px; background: #2a3452; outline: none; cursor: pointer; }
+  input[type="range"].vol-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #f2f4f8; cursor: pointer; }
+  input[type="range"].vol-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #f2f4f8; cursor: pointer; }
+
+  /* ---------- Upload ---------- */
+  .upload { margin-top: 16px; }
+  .upload-btn {
+    display: block; width: 100%; text-align: center; cursor: pointer;
+    background: #1d7a4f; color: #fff; font-size: 17px; font-weight: 700;
+    padding: 14px; border-radius: 14px; border: none;
+  }
+  .upload-btn:active { transform: scale(.98); }
+  .upload-hint { margin-top: 8px; text-align: center; color: #9aa3b5; font-size: 13px; }
+  .drop-hint { text-align: center; color: #5f6b85; font-size: 12px; margin-top: 6px; }
+  body.dragging .upload-btn { outline: 3px dashed #f7d774; outline-offset: 4px; }
+
+  /* ---------- Playlist ---------- */
+  .list-head { display: flex; align-items: baseline; justify-content: space-between; margin: 22px 2px 10px; }
+  .list-head h2 { font-size: 18px; }
+  .list-head button {
+    background: none; border: none; color: #e06c6c; font-size: 13px; cursor: pointer; padding: 4px;
+  }
+  .list-head button:disabled { opacity: .4; }
+  #list { list-style: none; }
+  #list li {
+    display: flex; align-items: center; gap: 12px; padding: 12px 10px;
+    background: #121728; border: 1px solid #1d2540; border-radius: 14px; margin-bottom: 8px; cursor: pointer;
+  }
+  #list li.current { border-color: #f7d774; background: #1a1f33; }
+  #list li .num { width: 26px; text-align: center; color: #9aa3b5; font-size: 13px; flex: 0 0 26px; }
+  #list li.current .num { color: #f7d774; }
+  #list li .t { flex: 1; min-width: 0; }
+  #list li .t .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #list li .t .dur { font-size: 12px; color: #9aa3b5; margin-top: 2px; }
+  #list li .del {
+    background: none; border: none; color: #8b93a7; font-size: 18px; cursor: pointer; padding: 4px 6px; flex: 0 0 auto;
+  }
+  #list li .del:active { color: #e06c6c; }
+  .empty {
+    text-align: center; color: #9aa3b5; padding: 26px 12px;
+    border: 1px dashed #2a3452; border-radius: 14px; font-size: 15px; line-height: 1.7;
+  }
+  .note { margin-top: 22px; color: #5f6b85; font-size: 12.5px; line-height: 1.7; text-align: center; }
+  .toast {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    background: #1d7a4f; color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 14px; display: none; z-index: 50; box-shadow: 0 8px 30px rgba(0,0,0,.5);
+    max-width: 92vw; text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="poster">আমার গান</div>
+    <div class="sub">তোমার পছন্দের গান — যেকোনো সময়, যেকোনো জায়গায়</div>
+  </header>
+
+  <section class="player">
+    <div class="disc-row">
+      <div class="disc" id="disc"><span class="note">🎵</span></div>
+      <div class="track-info">
+        <div class="track-title" id="trackTitle">এখনো কোনো গান নেই</div>
+        <div class="track-meta" id="trackMeta">গান যোগ করলেই এখানে বাজবে</div>
+        <div class="track-state" id="trackState"></div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <input type="range" class="seek" id="seek" min="0" max="1000" value="0" step="1" aria-label="সময়">
+      <div class="times"><span id="curTime">০০:০০</span><span id="durTime">০০:০০</span></div>
+    </div>
+
+    <div class="controls">
+      <button class="cbtn" id="prevBtn" title="আগের গান">⏮</button>
+      <button class="cbtn play" id="playBtn" title="চালান / থামান">▶</button>
+      <button class="cbtn" id="nextBtn" title="পরের গান">⏭</button>
+    </div>
+
+    <div class="mini-row">
+      <div style="display:flex; gap:8px;">
+        <button class="toggle" id="repeatBtn" title="আবার বাজান">🔁 বন্ধ</button>
+        <button class="toggle" id="shuffleBtn" title="এলোমেলো">🔀 বন্ধ</button>
+      </div>
+      <label class="vol">🔊 <input type="range" class="vol-range" id="vol" min="0" max="100" value="90"></label>
+    </div>
+  </section>
+
+  <section class="upload">
+    <label class="upload-btn" for="fileInput">＋ গান যোগ করুন</label>
+    <input type="file" id="fileInput" accept="audio/*" multiple hidden>
+    <div class="upload-hint">এআই দিয়ে বানানো বা নিজের গাওয়া গান — অডিও ফাইল বেছে নাও</div>
+    <div class="drop-hint">ফাইল টেনে এনে এখানে ছাড়লেও যোগ হবে</div>
+  </section>
+
+  <div class="list-head">
+    <h2>তালিকা (<span id="count">০</span>)</h2>
+    <button id="clearBtn" disabled>সব মুছুন</button>
+  </div>
+  <ul id="list"></ul>
+  <div class="empty" id="emptyBox">এখনো কোনো গান যোগ হয়নি।<br>উপরের বোতাম চেপে তোমার পছন্দের গানগুলো যোগ করো।</div>
+
+  <p class="note">গানগুলো শুধু এই ফোন/ডিভাইসেই থাকে — সাইট বন্ধ করলে গান থামে, কিন্তু তালিকা মুছে যায় না। পেজ খোলা থাকলে ব্যাকগ্রাউন্ডেও গান চলতে থাকে।</p>
+</div>
+
+<audio id="audio" playsinline preload="metadata"></audio>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- helpers ---------- */
+  var BN = ["০","১","২","৩","৪","৫","৬","৭","৮","৯"];
+  function bn(n) { return String(n).replace(/[0-9]/g, function (d) { return BN[+d]; }); }
+  function fmt(sec) {
+    if (!isFinite(sec) || sec == null) sec = 0;
+    sec = Math.floor(sec);
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return bn(m) + ":" + (s < 10 ? "০" : "") + bn(s);
+  }
+  function cleanName(fileName) {
+    var n = fileName.replace(/\.[^.]+$/, "");
+    return n.replace(/[_-]+/g, " ").trim() || fileName;
+  }
+  function toast(msg) {
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.style.display = "block";
+    clearTimeout(t._h);
+    t._h = setTimeout(function () { t.style.display = "none"; }, 2600);
+  }
+
+  /* ---------- elements ---------- */
+  var audio = document.getElementById("audio");
+  var disc = document.getElementById("disc");
+  var trackTitle = document.getElementById("trackTitle");
+  var trackMeta = document.getElementById("trackMeta");
+  var trackState = document.getElementById("trackState");
+  var seek = document.getElementById("seek");
+  var curTimeEl = document.getElementById("curTime");
+  var durTimeEl = document.getElementById("durTime");
+  var playBtn = document.getElementById("playBtn");
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var repeatBtn = document.getElementById("repeatBtn");
+  var shuffleBtn = document.getElementById("shuffleBtn");
+  var vol = document.getElementById("vol");
+  var fileInput = document.getElementById("fileInput");
+  var listEl = document.getElementById("list");
+  var emptyBox = document.getElementById("emptyBox");
+  var countEl = document.getElementById("count");
+  var clearBtn = document.getElementById("clearBtn");
+
+  /* ---------- state ---------- */
+  var songs = [];            // {id, name, type, blob, duration}
+  var currentId = null;
+  var currentUrl = null;
+  var repeatMode = 0;        // 0 বন্ধ, 1 সব, 2 একটি
+  var shuffle = false;
+  var seeking = false;
+  var lastSave = 0;
+
+  /* ---------- IndexedDB ---------- */
+  var DB_NAME = "amar-gaan-db", STORE = "songs", db = null;
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      if (!("indexedDB" in window)) { reject(new Error("no-idb")); return; }
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function () {
+        var d = req.result;
+        if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+      };
+      req.onsuccess = function () { db = req.result; resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function dbAll() {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(STORE, "readonly");
+      var req = tx.objectStore(STORE).getAll();
+      req.onsuccess = function () { resolve(req.result || []); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function dbAdd(song) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(STORE, "readwrite");
+      var req = tx.objectStore(STORE).add(song);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function dbDelete(id) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(STORE, "readwrite");
+      var req = tx.objectStore(STORE).delete(id);
+      req.onsuccess = function () { resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function dbClear() {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(STORE, "readwrite");
+      var req = tx.objectStore(STORE).clear();
+      req.onsuccess = function () { resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  function dbPut(song) {
+    return new Promise(function (resolve, reject) {
+      var tx = db.transaction(STORE, "readwrite");
+      var req = tx.objectStore(STORE).put(song);
+      req.onsuccess = function () { resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  /* ---------- player UI ---------- */
+  function setStateUI() {
+    var playing = !audio.paused && !audio.ended;
+    playBtn.textContent = playing ? "⏸" : "▶";
+    disc.classList.toggle("playing", playing);
+    trackState.textContent = playing ? "● বাজছে" : (currentId ? "❚❚ থামানো আছে" : "");
+    document.title = currentId ? (playing ? "▶ " : "") + currentTrack().name + " — আমার গান" : "আমার গান";
+  }
+  function currentTrack() {
+    for (var i = 0; i < songs.length; i++) if (songs[i].id === currentId) return songs[i];
+    return null;
+  }
+  function currentIndex() {
+    for (var i = 0; i < songs.length; i++) if (songs[i].id === currentId) return i;
+    return -1;
+  }
+  function updateMediaSession() {
+    if (!("mediaSession" in navigator)) return;
+    var t = currentTrack();
+    try {
+      navigator.mediaSession.metadata = t ? new MediaMetadata({
+        title: t.name, artist: "আমার গান", album: "আমার গান"
+      }) : null;
+    } catch (e) { /* পুরনো ব্রাউজার — কিছু করার নেই */ }
+  }
+
+  function loadTrack(id, autoplay) {
+    var t = null;
+    for (var i = 0; i < songs.length; i++) if (songs[i].id === id) t = songs[i];
+    if (!t) return;
+    if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+    currentId = t.id;
+    currentUrl = URL.createObjectURL(t.blob);
+    audio.src = currentUrl;
+    audio.load();
+    trackTitle.textContent = t.name;
+    trackMeta.textContent = t.duration ? ("সময় " + fmt(t.duration)) : "তৈরি হচ্ছে…";
+    durTimeEl.textContent = t.duration ? fmt(t.duration) : "০০:০০";
+    curTimeEl.textContent = "০০:০০";
+    seek.value = 0;
+    try { localStorage.setItem("amar-gaan-last", JSON.stringify({ id: t.id, pos: 0 })); } catch (e) {}
+    renderList();
+    updateMediaSession();
+    setStateUI();
+    if (autoplay) { audio.play().catch(function () { setStateUI(); }); }
+  }
+
+  function playPause() {
+    if (!currentId) {
+      if (songs.length) loadTrack(songs[0].id, true);
+      return;
+    }
+    if (audio.paused) { audio.play().catch(function () { toast("গানটা বাজানো যাচ্ছে না"); }); }
+    else audio.pause();
+    setStateUI();
+  }
+  function nextTrack(auto) {
+    if (!songs.length) return;
+    var i = currentIndex();
+    if (shuffle) {
+      var n;
+      do { n = Math.floor(Math.random() * songs.length); } while (songs.length > 1 && n === i);
+      loadTrack(songs[n].id, true);
+      return;
+    }
+    if (i < songs.length - 1) loadTrack(songs[i + 1].id, true);
+    else if (repeatMode === 1) loadTrack(songs[0].id, true);
+    else if (auto) { audio.pause(); audio.currentTime = 0; setStateUI(); }
+    else loadTrack(songs[0].id, true);
+  }
+  function prevTrack() {
+    if (!songs.length) return;
+    if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+    var i = currentIndex();
+    if (i > 0) loadTrack(songs[i - 1].id, true);
+    else loadTrack(songs[songs.length - 1].id, true);
+  }
+
+  /* ---------- playlist render ---------- */
+  function renderList() {
+    countEl.textContent = bn(songs.length);
+    clearBtn.disabled = songs.length === 0;
+    emptyBox.style.display = songs.length ? "none" : "block";
+    listEl.innerHTML = "";
+    songs.forEach(function (s, i) {
+      var li = document.createElement("li");
+      if (s.id === currentId) li.className = "current";
+      var num = document.createElement("span"); num.className = "num";
+      num.textContent = (s.id === currentId && !audio.paused) ? "♪" : bn(i + 1);
+      var t = document.createElement("div"); t.className = "t";
+      var name = document.createElement("div"); name.className = "name"; name.textContent = s.name;
+      var dur = document.createElement("div"); dur.className = "dur";
+      dur.textContent = s.duration ? ("সময় " + fmt(s.duration)) : "সময় জানা যাচ্ছে…";
+      t.appendChild(name); t.appendChild(dur);
+      var del = document.createElement("button"); del.className = "del"; del.textContent = "✕"; del.title = "মুছুন";
+      del.addEventListener("click", function (e) { e.stopPropagation(); deleteTrack(s.id); });
+      li.appendChild(num); li.appendChild(t); li.appendChild(del);
+      li.addEventListener("click", function () {
+        if (s.id === currentId) playPause();
+        else loadTrack(s.id, true);
+      });
+      listEl.appendChild(li);
+    });
+  }
+
+  /* ---------- upload / delete ---------- */
+  function addFiles(files) {
+    var list = [];
+    for (var i = 0; i < files.length; i++) {
+      var f = files[i];
+      if (!f.type || f.type.indexOf("audio") !== 0) {
+        if (!/\.(mp3|m4a|wav|ogg|opus|flac|aac)$/i.test(f.name)) continue;
+      }
+      list.push(f);
+    }
+    if (!list.length) { toast("অডিও ফাইল বেছে নাও"); return; }
+    var added = 0, firstId = null;
+    var chain = Promise.resolve();
+    list.forEach(function (f) {
+      chain = chain.then(function () {
+        return dbAdd({ name: cleanName(f.name), type: f.type, blob: f, duration: 0, addedAt: Date.now() });
+      }).then(function (id) {
+        added++;
+        if (firstId === null) firstId = id;
+      });
+    });
+    chain.then(function () { return dbAll(); }).then(function (all) {
+      songs = all;
+      renderList();
+      toast(bn(added) + "টি গান যোগ হয়েছে");
+      if (!currentId && firstId) loadTrack(firstId, false);
+    }).catch(function () { toast("গান রাখা যায়নি — ব্রাউজারের সংরক্ষণ বন্ধ আছে কি না দেখো"); });
+  }
+  function deleteTrack(id) {
+    var wasCurrent = (id === currentId);
+    dbDelete(id).then(function () { return dbAll(); }).then(function (all) {
+      songs = all;
+      if (wasCurrent) {
+        audio.pause();
+        if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+        currentId = null;
+        audio.removeAttribute("src"); audio.load();
+        trackTitle.textContent = "এখনো কোনো গান নেই";
+        trackMeta.textContent = "গান যোগ করলেই এখানে বাজবে";
+        trackState.textContent = "";
+        durTimeEl.textContent = "০০:০০"; curTimeEl.textContent = "০০:০০"; seek.value = 0;
+        document.title = "আমার গান";
+        try { localStorage.removeItem("amar-gaan-last"); } catch (e) {}
+        if (songs.length) loadTrack(songs[0].id, false);
+      }
+      renderList(); setStateUI();
+    });
+  }
+
+  /* ---------- events ---------- */
+  playBtn.addEventListener("click", playPause);
+  nextBtn.addEventListener("click", function () { nextTrack(false); });
+  prevBtn.addEventListener("click", prevTrack);
+  audio.addEventListener("play", setStateUI);
+  audio.addEventListener("pause", setStateUI);
+  audio.addEventListener("ended", function () {
+    if (repeatMode === 2) { audio.currentTime = 0; audio.play(); return; }
+    nextTrack(true);
+  });
+  audio.addEventListener("loadedmetadata", function () {
+    var t = currentTrack();
+    if (t && isFinite(audio.duration)) {
+      durTimeEl.textContent = fmt(audio.duration);
+      if (!t.duration) {
+        t.duration = audio.duration;
+        trackMeta.textContent = "সময় " + fmt(t.duration);
+        dbPut(t).catch(function () {});
+        renderList();
+      }
+      try {
+        var last = JSON.parse(localStorage.getItem("amar-gaan-last") || "null");
+        if (last && last.id === t.id && last.pos > 1 && last.pos < audio.duration - 2) {
+          audio.currentTime = last.pos;
+        }
+      } catch (e) {}
+    }
+  });
+  audio.addEventListener("timeupdate", function () {
+    if (!seeking && isFinite(audio.duration) && audio.duration > 0) {
+      seek.value = Math.round((audio.currentTime / audio.duration) * 1000);
+    }
+    curTimeEl.textContent = fmt(audio.currentTime);
+    var now = Date.now();
+    if (currentId && now - lastSave > 5000) {
+      lastSave = now;
+      try { localStorage.setItem("amar-gaan-last", JSON.stringify({ id: currentId, pos: audio.currentTime })); } catch (e) {}
+    }
+  });
+  audio.addEventListener("error", function () {
+    if (currentId) toast("গানটা বাজানো যাচ্ছে না");
+  });
+  seek.addEventListener("input", function () {
+    seeking = true;
+    if (isFinite(audio.duration) && audio.duration > 0) {
+      audio.currentTime = (seek.value / 1000) * audio.duration;
+      curTimeEl.textContent = fmt(audio.currentTime);
+    }
+  });
+  seek.addEventListener("change", function () { seeking = false; });
+  vol.addEventListener("input", function () { audio.volume = vol.value / 100; });
+  repeatBtn.addEventListener("click", function () {
+    repeatMode = (repeatMode + 1) % 3;
+    repeatBtn.textContent = repeatMode === 0 ? "🔁 বন্ধ" : (repeatMode === 1 ? "🔁 সব" : "🔁 একটি");
+    repeatBtn.classList.toggle("on", repeatMode !== 0);
+  });
+  shuffleBtn.addEventListener("click", function () {
+    shuffle = !shuffle;
+    shuffleBtn.textContent = shuffle ? "🔀 চালু" : "🔀 বন্ধ";
+    shuffleBtn.classList.toggle("on", shuffle);
+  });
+  fileInput.addEventListener("change", function () {
+    addFiles(fileInput.files);
+    fileInput.value = "";
+  });
+  clearBtn.addEventListener("click", function () {
+    if (!songs.length) return;
+    if (!confirm("তালিকার সব গান মুছে ফেলবে?")) return;
+    audio.pause();
+    if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+    currentId = null;
+    audio.removeAttribute("src"); audio.load();
+    dbClear().then(function () { return dbAll(); }).then(function (all) {
+      songs = all;
+      trackTitle.textContent = "এখনো কোনো গান নেই";
+      trackMeta.textContent = "গান যোগ করলেই এখানে বাজবে";
+      trackState.textContent = "";
+      durTimeEl.textContent = "০০:০০"; curTimeEl.textContent = "০০:০০"; seek.value = 0;
+      document.title = "আমার গান";
+      try { localStorage.removeItem("amar-gaan-last"); } catch (e) {}
+      renderList(); setStateUI();
+      toast("সব গান মোছা হয়েছে");
+    });
+  });
+
+  /* drag & drop */
+  ["dragenter", "dragover"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); document.body.classList.add("dragging"); });
+  });
+  ["dragleave", "drop"].forEach(function (ev) {
+    document.addEventListener(ev, function (e) { e.preventDefault(); document.body.classList.remove("dragging"); });
+  });
+  document.addEventListener("drop", function (e) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  /* media session — lock screen controls */
+  if ("mediaSession" in navigator) {
+    try {
+      navigator.mediaSession.setActionHandler("play", function () { audio.play(); });
+      navigator.mediaSession.setActionHandler("pause", function () { audio.pause(); });
+      navigator.mediaSession.setActionHandler("previoustrack", prevTrack);
+      navigator.mediaSession.setActionHandler("nexttrack", function () { nextTrack(false); });
+    } catch (e) {}
+  }
+
+  /* ---------- init ---------- */
+  audio.volume = 0.9;
+  openDB().then(function () { return dbAll(); }).then(function (all) {
+    songs = all;
+    renderList();
+    if (songs.length) {
+      var last = null;
+      try { last = JSON.parse(localStorage.getItem("amar-gaan-last") || "null"); } catch (e) {}
+      var target = null;
+      if (last) for (var i = 0; i < songs.length; i++) if (songs[i].id === last.id) target = songs[i];
+      loadTrack(target ? target.id : songs[0].id, false);
+    }
+    setStateUI();
+  }).catch(function () {
+    emptyBox.innerHTML = "এই ব্রাউজারে গান সংরক্ষণ করা যাচ্ছে না।<br>গান শুনতে হলে ব্রাউজারের সংরক্ষণ (storage) চালু রাখতে হবে।";
+    emptyBox.style.display = "block";
+  });
+})();
+</script>
+</body>
+</html>
