@@ -97,10 +97,12 @@
   .upload-btn {
     display: block; width: 100%; text-align: center; cursor: pointer;
     background: #1d7a4f; color: #fff; font-size: 17px; font-weight: 700;
-    padding: 14px; border-radius: 14px; border: none;
+    padding: 14px; border-radius: 14px; border: none; font-family: inherit;
   }
+  #fileInput { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
   .upload-btn:active { transform: scale(.98); }
   .upload-hint { margin-top: 8px; text-align: center; color: #9aa3b5; font-size: 13px; }
+  .up-status { margin-top: 8px; text-align: center; color: #f7d774; font-size: 13px; min-height: 18px; }
   .drop-hint { text-align: center; color: #5f6b85; font-size: 12px; margin-top: 6px; }
   body.dragging .upload-btn { outline: 3px dashed #f7d774; outline-offset: 4px; }
 
@@ -178,9 +180,10 @@
   </section>
 
   <section class="upload">
-    <label class="upload-btn" for="fileInput">＋ গান যোগ করুন</label>
-    <input type="file" id="fileInput" accept="audio/*" multiple hidden>
+    <button class="upload-btn" id="uploadBtn" type="button">＋ গান যোগ করুন</button>
+    <input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.flac,.aac,.aif,.aiff,.wma,.mp4,.m4v,.mov" multiple>
     <div class="upload-hint">এআই দিয়ে বানানো বা নিজের গাওয়া গান — অডিও ফাইল বেছে নাও</div>
+    <div class="up-status" id="upStatus"></div>
     <div class="drop-hint">ফাইল টেনে এনে এখানে ছাড়লেও যোগ হবে</div>
   </section>
 
@@ -238,6 +241,7 @@
   var shuffleBtn = document.getElementById("shuffleBtn");
   var vol = document.getElementById("vol");
   var fileInput = document.getElementById("fileInput");
+  var uploadBtn = document.getElementById("uploadBtn");
   var listEl = document.getElementById("list");
   var emptyBox = document.getElementById("emptyBox");
   var countEl = document.getElementById("count");
@@ -413,16 +417,25 @@
   }
 
   /* ---------- upload / delete ---------- */
+  function setStatus(msg) {
+    var el = document.getElementById("upStatus");
+    if (el) el.textContent = msg;
+  }
   function addFiles(files) {
-    var list = [];
+    if (!files || !files.length) return;
+    var list = [], skipped = [];
     for (var i = 0; i < files.length; i++) {
       var f = files[i];
-      if (!f.type || f.type.indexOf("audio") !== 0) {
-        if (!/\.(mp3|m4a|wav|ogg|opus|flac|aac)$/i.test(f.name)) continue;
-      }
-      list.push(f);
+      var ok = (f.type && f.type.indexOf("audio") === 0) ||
+        /\.(mp3|m4a|wav|ogg|opus|flac|aac|aif|aiff|wma|mp4|m4v|mov)$/i.test(f.name);
+      if (f.size === 0) ok = false;
+      if (ok) list.push(f); else skipped.push(f.name);
     }
-    if (!list.length) { toast("অডিও ফাইল বেছে নাও"); return; }
+    if (!list.length) {
+      setStatus(skipped.length ? ("এই ফাইলটা গান হিসেবে নেওয়া যায়নি: " + skipped.join(", ")) : "অডিও ফাইল বেছে নাও");
+      return;
+    }
+    setStatus("পেয়েছি: " + list[0].name + (list.length > 1 ? (" + আরও " + bn(list.length - 1) + "টি") : "") + " — তালিকায় বসাচ্ছি…");
     var added = 0, firstId = null;
     var chain = Promise.resolve();
     list.forEach(function (f) {
@@ -436,9 +449,13 @@
     chain.then(function () { return dbAll(); }).then(function (all) {
       songs = all;
       renderList();
+      setStatus(bn(added) + "টি গান যোগ হয়েছে");
       toast(bn(added) + "টি গান যোগ হয়েছে");
       if (!currentId && firstId) loadTrack(firstId, false);
-    }).catch(function () { toast("গান রাখা যায়নি — ব্রাউজারের সংরক্ষণ বন্ধ আছে কি না দেখো"); });
+    }).catch(function () {
+      setStatus("গান রাখা যায়নি — ব্রাউজারের সংরক্ষণ বন্ধ আছে কি না দেখো");
+      toast("গান রাখা যায়নি — ব্রাউজারের সংরক্ষণ বন্ধ আছে কি না দেখো");
+    });
   }
   function deleteTrack(id) {
     var wasCurrent = (id === currentId);
@@ -522,6 +539,7 @@
     shuffleBtn.textContent = shuffle ? "🔀 চালু" : "🔀 বন্ধ";
     shuffleBtn.classList.toggle("on", shuffle);
   });
+  uploadBtn.addEventListener("click", function () { fileInput.click(); });
   fileInput.addEventListener("change", function () {
     addFiles(fileInput.files);
     fileInput.value = "";
